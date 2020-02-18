@@ -1,0 +1,70 @@
+import requests
+import json
+import pprint
+import random
+import html #needed to properly present quotation marks ("") and 's 
+
+url = "https://opentdb.com/api.php?amount=1"
+
+score_correct = 0 
+score_incorrect = 0 
+endGame = ""
+counter_right = 0
+
+while endGame != "quit":
+  source = requests.get(url)  #reloads the HTTP request to get new questions
+  source.status_code
+  if (source.status_code != 200):
+    endGame = input("Sorry, cannot retrieve questions. Press enter to try again or type 'quit' to quit")
+  else:
+    valid_answer = False
+    answer_number = 1
+    data = json.loads(source.text)
+    #pprint.pprint(data)
+
+    print("Welcome to the quiz!")
+    
+    question = data["results"][0]["question"]
+    category = data["results"][0]["category"]
+    answers = data["results"][0]["incorrect_answers"]
+    correct_answer = data["results"][0]["correct_answer"]
+    answers.append(correct_answer)
+    random.shuffle(answers)
+
+    print("The next question is of the category:" + str(category))
+    print("\n")
+    print(html.unescape(question) + "\n") # html.unescape function lets us properly present heml codes for specific signs, such as "" and ' 
+    for answer in answers: 
+      print(str(answer_number) + "- " + html.unescape(answer))
+      answer_number += 1
+    
+    while valid_answer == False:
+      user_answer = input("\nType the number of the correct answer: ")
+      try: 
+        user_answer = int(user_answer)
+        if user_answer > len(answers) or user_answer <= 0:
+          print("Invalid Answer")
+        else: 
+          valid_answer = True
+      except: 
+        print("Invalid answer. Use only numbers")
+
+
+    user_answer = answers[int(user_answer)-1] #takes the user answer and pairs it with the corresponding answer in the answers list - substraction of 1 is necessary as the indexes of answers start at 0 not 1 
+    
+    if user_answer == correct_answer: 
+      print("Congrats! You answered correctly! The correct answer was: " + html.unescape(correct_answer))
+      score_correct +=1
+    else: 
+      print("Sorry, " + html.unescape(user_answer) + " is incorrect. The correct answer is: " + html.unescape(correct_answer))
+      score_incorrect += 1
+
+    print("\n##############################")
+    print("Your score is:")
+    print("Correct answers: " + str(score_correct))
+    print("Incorrect answers: " + str(score_incorrect))
+    print("\n##############################")
+
+    endGame = input("\nPress enter to play again or type 'quit' to quit\n ").lower()
+
+print("\nThanks for playing")
